@@ -1,0 +1,84 @@
+; test input file for beansort.py
+;plugin  "whatever"
+plugin  "beancount_payeeverif"
+option  "documents"  "./"
+
+2000-01-01  open  Assets:Bank BEAN
+  docverif: "Require"
+  document: "2020-06-01.plumber - services.pdf"
+
+2000-01-01  open  Expenses:Beans BEAN
+  docverif: "Require"
+
+2000-01-01  open  Expenses:General BEAN
+  docverif: "Require"
+
+2000-01-01  open  Expenses:Salary BEAN
+  docverif: "Require"
+
+2000-01-01  open  Liabilities:Capital BEAN
+  docverif: "Require"
+
+; commented-out entry should still be sorted
+;2000-01-01  open  Assets:Bank BEAN
+
+; should be sorted _after_ the open statements
+2000-01-01  *  "company"  "founding capital"
+  Liabilities:Capital
+  Assets:Bank 10000 BEAN
+
+; should stay _above_ the push/pop tag block
+2020-06-01  *  "company"  "gadget"
+  Expenses:General
+  Assets:Bank -75 BEAN
+
+; transactions inside block must stay inside block
+; even though they interleave others
+pushtag #block1
+
+2020-05-02  *  "secretary"  "salary"
+  Expenses:Salary
+  Assets:Bank -1000 BEAN
+2020-06-02  *  "secretary"  "salary"
+  Expenses:Salary
+  Assets:Bank -1000 BEAN
+
+; ; commented entry with no preceding space should still be sorted
+; 2020-07-02  *  "secretary"  "salary"
+;   Expenses:Salary
+;   Assets:Bank -1000 BEAN
+
+; comment should stay connected to push/pop directive
+poptag #block1
+
+2020-06-01  *  "company"  "gadget"
+  Expenses:Beans
+  Assets:Bank -750 BEAN
+
+; duplicate entry with different movements should be kept, exact duplicates removed
+2020-06-01  *  "company"  "gadget"
+  Expenses:Beans
+  Assets:Bank -7 BEAN
+
+2020-06-02  *  "plumber"  "fix faucet leak"
+  document: "2020-06-01.plumber - services.pdf"
+  Expenses:General
+  Assets:Bank -150 BEAN
+
+; same date, but lexically follows previous
+2020-06-02  *  "plumber"  "services"
+  Expenses:General
+  Assets:Bank -150 BEAN
+
+2020-06-03  *  "restaurant"  "dinner"
+  document: "2020-06-01.restaurant - dinner.pdf"
+  Expenses:General
+  Assets:Bank -50 BEAN
+
+2020-06-04  *  "store"  "groceries"
+  document: "None"
+  Expenses:General
+  Assets:Bank -10 BEAN
+; should be sorted _after_ transactions for the same day
+2020-06-04  close  Expenses:General
+
